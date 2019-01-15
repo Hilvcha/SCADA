@@ -91,7 +91,7 @@ class operateData(object):
         data=pd.DataFrame(columns=['ts','wtid','var001','var002','var003','var004','var005','var006','var007','var008','var009','var010','var011','var012','var013','var014','var015','var016','var017','var018','var019','var020','var021','var022','var023','var024','var025','var026','var027','var028','var029','var030','var031','var032','var033','var034','var035','var036','var037','var038','var039','var040','var041','var042','var043','var044','var045','var046','var047','var048','var049','var050','var051','var052','var053','var054','var055','var056','var057','var058','var059','var060','var061','var062','var063','var064','var065','var066','var067','var068'])
         for submit_id in range(1,34):
             submitdata_path = os.path.join(SUBMITDATA_PATH, str(submit_id).zfill(3) + 'submit.csv')
-            df=pd.read_csv(submitdata_path,index_col=[0])
+            df=pd.read_csv(submitdata_path)
             data=data.append(df)
         # 转换枚举类型
         enumVar = ['var016', 'var020', 'var047', 'var053', 'var066']
@@ -111,9 +111,14 @@ if __name__ == '__main__':
         df=op.readData(data_id)
         df=pd.merge(op.submitdata[op.submitdata['wtid']==data_id],df,how='outer',on=['ts','wtid'])
         df.sort_values(by=['ts'],inplace=True)
-        df.interpolate(method='spline',order=2,inplace=True)
-        df=pd.merge(op.submitdata[op.submitdata['wtid']==data_id],df,how='left',on=['ts','wtid'])
-
+        df['ts']=pd.to_datetime(df['ts'])
+        df.set_index(['ts'],inplace=True)
+        df.interpolate(method='time',inplace=True)
+        print(op.submitdata[op.submitdata['wtid']==data_id])
+        print(df)
+        # df=pd.merge(op.submitdata[op.submitdata['wtid']==data_id],df,how='left',left_on=['ts'],right_index=True)
+        df=df.loc[pd.to_datetime(op.submitdata[op.submitdata['wtid']==data_id]['ts']) ,:]
+        print(df)
         op.saveSubmitData(data=df,submit_id=data_id)
 
     data=op.combineSubmitData()
